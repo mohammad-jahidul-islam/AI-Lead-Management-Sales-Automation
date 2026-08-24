@@ -1,0 +1,480 @@
+{
+  "name": "AI Lead Management & Sales Automation Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-form",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "293e9434-50b7-481c-b931-f9067b2201c2",
+      "name": "Webhook",
+      "webhookId": "1c9c1141-52c7-4ef7-98b6-ba19587534dd"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6551c1e3-31da-41de-82bb-8ceeb72d950e",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "c0299f3b-539e-42ee-8575-47b81a17c99e",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "5dc8758d-3aa9-474b-8801-56597851ea62",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "eeff9074-4b7c-4b57-ad7b-087a7f82ab08",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ed39d2ce-48ff-4322-af24-3a2433319f28",
+      "name": "Prepare Lead Data"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an AI sales lead analyst.\n\nAnalyze the following customer lead.\n\nName: {{ $json.name }}\nEmail: {{ $json.email }}\nCompany: {{ $json.company }}\nMessage: {{ $json.message }}\n\nReturn:\n- category\n- intent\n- priority: High, Medium, or Low\n- lead_score: integer from 0 to 100\n- summary: one short sentence\n- recommended_action: one short sentence\n\nScoring guide:\n80-100 = strong buying/demo/project intent\n50-79 = possible interest or needs follow-up\n0-49 = weak, unclear, spam, or non-sales enquiry\n\nDo not invent information that is not present in the lead.\n\nReturn only valid JSON using exactly these keys:\n{\n  \"category\": \"\",\n  \"intent\": \"\",\n  \"priority\": \"\",\n  \"lead_score\": 0,\n  \"summary\": \"\",\n  \"recommended_action\": \"\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "name": "lead_analysis",
+              "schema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\"\n    },\n    \"intent\": {\n      \"type\": \"string\"\n    },\n    \"priority\": {\n      \"type\": \"string\",\n      \"enum\": [\"High\", \"Medium\", \"Low\"]\n    },\n    \"lead_score\": {\n      \"type\": \"integer\",\n      \"minimum\": 0,\n      \"maximum\": 100\n    },\n    \"summary\": {\n      \"type\": \"string\"\n    },\n    \"recommended_action\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"category\",\n    \"intent\",\n    \"priority\",\n    \"lead_score\",\n    \"summary\",\n    \"recommended_action\"\n  ],\n  \"additionalProperties\": false\n}",
+              "strict": true
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "a5f0f4a2-4cbd-40d0-a6bf-015ae13f75a6",
+      "name": "Analyze Lead with AI",
+      "credentials": {
+        "openAiApi": {
+          "id": "etq8QN5qB1UlhKJR",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4616c19-8ee6-4f37-9883-4f2148540fcf",
+              "name": "name",
+              "value": "={{ $('Prepare Lead Data').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "cf39998c-147b-4885-84f8-c55d7d08ead9",
+              "name": "email",
+              "value": "={{ $('Prepare Lead Data').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "db2b8525-fd48-415e-b220-2e1efbbad72f",
+              "name": "company",
+              "value": "={{ $('Prepare Lead Data').item.json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "d0425f43-3efc-40bb-ae22-6895cce2b5cc",
+              "name": "message",
+              "value": "={{ $('Prepare Lead Data').item.json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "4d4648b2-2a7c-4f6a-b7f1-8cdae9cd92fd",
+              "name": "category",
+              "value": "={{ $json.output[0].content[0].text.category }}",
+              "type": "string"
+            },
+            {
+              "id": "33a99a5f-9801-485e-afc5-543506910143",
+              "name": "intent",
+              "value": "={{ $json.output[0].content[0].text.intent }}",
+              "type": "string"
+            },
+            {
+              "id": "31d41528-eeb6-45da-809b-734e0cf6c9e4",
+              "name": "priority",
+              "value": "={{ $json.output[0].content[0].text.priority }}",
+              "type": "string"
+            },
+            {
+              "id": "249caa3a-b159-425d-a0a5-ab3c85b4da76",
+              "name": "lead_score",
+              "value": "={{ $json.output[0].content[0].text.lead_score }}",
+              "type": "string"
+            },
+            {
+              "id": "048603a3-7488-4e8b-af56-17418eff20f4",
+              "name": "summary",
+              "value": "={{ $json.output[0].content[0].text.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "b0111b87-58bd-43a1-82ac-f5ad24cbfa25",
+              "name": "recommended_action",
+              "value": "={{ $json.output[0].content[0].text.recommended_action }}",
+              "type": "string"
+            },
+            {
+              "id": "e01b636d-a81d-4b96-a3d0-fd4861196ec9",
+              "name": "status",
+              "value": "New",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        0
+      ],
+      "id": "e2895ce4-394d-4160-9d7e-e6c418e06162",
+      "name": "Prepare Lead Record"
+    },
+    {
+      "parameters": {
+        "tableId": "leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "company",
+              "fieldValue": "={{ $json.company }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.message }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.category }}"
+            },
+            {
+              "fieldId": "intent",
+              "fieldValue": "={{ $json.intent }}"
+            },
+            {
+              "fieldId": "priority",
+              "fieldValue": "={{ $json.priority }}"
+            },
+            {
+              "fieldId": "lead_score",
+              "fieldValue": "={{ $json.lead_score }}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{ $json.summary }}"
+            },
+            {
+              "fieldId": "recommended_action",
+              "fieldValue": "={{ $json.recommended_action }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        976,
+        0
+      ],
+      "id": "17b3ae44-4736-4ad2-82e5-5e8da00d6c48",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "AuSNuwAQeTaqyLKQ",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "mzislam893@gmail.com",
+        "subject": "=Warm Lead - {{ $json.name }} | Score: {{ $json.lead_score }}",
+        "message": "=<h2>🟠 New Warm Lead</h2>  <p><strong>Name:</strong> {{ $json.name }}</p> <p><strong>Email:</strong> {{ $json.email }}</p> <p><strong>Company:</strong> {{ $json.company }}</p> <p><strong>Category:</strong> {{ $json.category }}</p> <p><strong>Intent:</strong> {{ $json.intent }}</p> <p><strong>Priority:</strong> {{ $json.priority }}</p> <p><strong>Lead Score:</strong> {{ $json.lead_score }}/100</p>  <p><strong>Customer Message:</strong><br> {{ $json.message }}</p>  <p><strong>AI Summary:</strong><br> {{ $json.summary }}</p>  <p><strong>Recommended Action:</strong><br> {{ $json.recommended_action }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        32
+      ],
+      "id": "33e4d598-0694-4857-b5c5-68b091e31e70",
+      "name": "Send Warm Lead Email",
+      "webhookId": "ebea8c27-bc77-46ce-87df-3746b2b2026e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WMw7cIAiDZlcMXpK",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "mzislam893@gmail.com",
+        "subject": "=Hot Lead Alert - {{ $json.name }} | Score: {{ $json.lead_score }}",
+        "message": "=<h2>🔥 New Hot Lead Detected</h2>  <p><strong>Name:</strong> {{ $json.name }}</p> <p><strong>Email:</strong> {{ $json.email }}</p> <p><strong>Company:</strong> {{ $json.company }}</p> <p><strong>Category:</strong> {{ $json.category }}</p> <p><strong>Intent:</strong> {{ $json.intent }}</p> <p><strong>Priority:</strong> {{ $json.priority }}</p> <p><strong>Lead Score:</strong> {{ $json.lead_score }}/100</p>  <p><strong>Customer Message:</strong><br> {{ $json.message }}</p>  <p><strong>AI Summary:</strong><br> {{ $json.summary }}</p>  <p><strong>Recommended Action:</strong><br> {{ $json.recommended_action }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        -112
+      ],
+      "id": "f84cf709-819c-4bd2-874c-3a4d17eb5022",
+      "name": "Send Hot Lead Alert",
+      "webhookId": "3eeba100-277e-461f-9ac3-764f96e24f9b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WMw7cIAiDZlcMXpK",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.lead_score }}",
+                    "rightValue": 80,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    },
+                    "id": "57f44707-5178-4da1-b0fd-46d159ff595b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hot Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bdd9808f-c59a-4b40-8097-89aa1b496587",
+                    "leftValue": "={{ $json.lead_score >= 50 && $json.lead_score < 80 }}",
+                    "rightValue": {},
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Warm Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c6ccdbdf-f4c5-4ec5-aa01-ebe1cd944b36",
+                    "leftValue": "={{ $json.lead_score < 50 }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cold Lead"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "09c73787-fa80-4eb4-b8fc-c66108c97571",
+      "name": "Route Lead by Score"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Analyze Lead with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Lead with AI": {
+      "main": [
+        [
+          {
+            "node": "Prepare Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Route Lead by Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Lead by Score": {
+      "main": [
+        [
+          {
+            "node": "Send Hot Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Warm Lead Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5483d108-8754-4bcb-a04b-ed49e67587e8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0b3772fc4952df55b3548be93dfcaa517fc54c68d3fb20045af33feaaaa979c"
+  },
+  "id": "jBnOuBm55TPAhK6p",
+  "tags": []
+}

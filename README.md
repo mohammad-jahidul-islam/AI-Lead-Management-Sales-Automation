@@ -34,6 +34,17 @@ When a customer submits the enquiry form, the system:
 
 ---
 
+## 🎥 Project Demo
+
+A short end-to-end demonstration of the AI Lead Management & Sales Automation system.
+
+➡️ [Watch the Demo Video](demo%20video/ai-lead-management-demo.mp4)
+
+The demo shows the complete process:
+
+**Web Enquiry Form → n8n Webhook → AI Lead Analysis → Lead Scoring → Supabase Database → Lead Routing → Gmail Alert**
+---
+
 ## 📝 Customer Enquiry Form
 
 A simple web form collects:
